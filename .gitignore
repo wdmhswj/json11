@@ -10,3 +10,12 @@ CMakeFiles
 CMakeScripts
 cmake_install.cmake
 install_manifest.txt
+
+
+# vscode 
+.vscode
+
+# build
+build/.cmake
+build/Testing
+build/compile_commands.json
