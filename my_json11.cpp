@@ -312,5 +312,130 @@ bool Json::operator< (const Json &other) const {
     return m_ptr->less(other.m_ptr.get());
 }
 
+/*
+ * Parsing: 解析
+ */
 
+/*
+ * esc(c)
+ * Format char c suitable for printing in an error message: 格式化字符 c，以便在错误消息中打印
+ */
+
+static inline string esc(char c) {  // inline: 内联函数, 表示将函数体直接插入到调用函数的地方
+    char buf[12];
+    if(static_cast<uint8_t>(c) >= 0x20 && static_cast<uint8_t>(c) <= 0x7f) {    // 判断是否是可打印字符
+        snprintf(buf, sizeof buf, "'%c' (%d)", c, c);   // '%c' (%d) 表示字符和 ASCII 码
+    }else{
+        snprintf(buf, sizeof buf, "(%d)", c);  // (%d) 表示 ASCII 码
+    }
+    return string(buf);
+}
+
+static inline bool in_range(long x, long lower, long upper) {
+    return (x >= lower && x <= upper);  // 判断 x 是否在 [lower, upper] 范围内
+}
+
+namespace {
+
+/*
+ * JsonParser: 解析 JSON 字符串
+ * Object that tracks all state of an in-progress parse: 跟踪正在进行的解析的所有状态的对象
+ */
+
+// 问题：JsonParser 是干什么的？
+struct JsonParser final {
+    // State: 状态
+    const string& str;  // JSON 字符串
+    size_t i;           // 当前解析的位置
+    string& err;        // 错误信息
+    bool failed;        // 是否解析失败
+    const JsonParse strategy;  // 解析策略: STANDARD, COMMENTS
+
+    // fail(msg, err_ret): 解析失败，返回 err_ret
+    // Mark this parse as failed: 将此解析标记为失败
+    Json fail(string&& msg) {
+        return fail(move(msg), Json());
+    }
+
+    template <typename T>
+    T fail(string&& msg, const T err_ret) {
+        if(!failed) {
+            err = std::move(msg);
+        }
+        failed = true;
+        return err_ret;
+    }
+
+    // consume_whitespace(): 跳过空白字符
+    // Advance until the current character is non-whitespace and non-comment: 前进，直到当前字符不是空白字符和注释
+    void consume_whitespace() {
+        while(str[i] == ' ' || str[i] == '\r' || str[i] == '\n' || str[i] == '\t') {
+            i++;
+        }
+    }
+
+    // consume_comment(): 跳过注释
+    // Advance comments (c-style inline and multiline): 前进注释（C 风格的内联和多行注释）
+    bool consume_comment() {
+        bool comment_found = false;
+        if(str[i] == '/') {
+            ++i;
+            if(i == str.size()) {
+                return fail("unexpected end of input after start of comment", false);   // 返回 false，同时设置错误信息
+            }else if(str[i] == '/') {  // inline comment
+                ++i;
+                // advance until next line, or end of input
+                while(i < str.size() && str[i] != '\n') {
+                    ++i;
+                }
+                comment_found = true;
+            }else if(str[i] == '*') {  // multiline comment
+                ++i;
+                if(i > str.size() - 2) {
+                    return fail("unexpected end of input inside multi-line comment", false);  // 返回 false，同时设置错误信息
+                }
+                while(!(str[i] == '*' && str[i+1] == '/')) {
+                    ++i;
+                    if(i > str.size() - 2) {
+                        return fail("unexpected end of input inside multi-line comment", false);  // 返回 false，同时设置错误信息
+                    }
+                }
+                i += 2;
+                comment_found = true;
+            }else{
+                return fail("malformed comment", false);  // 返回 false，同时设置错误信息
+            }
+        }
+        return comment_found;
+    }
+
+    // consume_garbage(): 跳过空白字符和注释
+    // Advance until the current character is non-whitespace and non-comment: 前进，直到当前字符不是空白字符和注释
+    void consume_garbage() {
+        consume_whitespace();   // 先跳过空白字符
+        if(strategy == JsonParse::COMMENTS) {   // 如果解析策略是 COMMENTS, 问题：解析策略什么时候设置
+            bool comment_found = false;
+            do {
+                comment_found = consume_comment();  // 跳过注释
+                if(failed) return;
+                consume_whitespace();  // 再次跳过空白字符
+            }while(comment_found);
+        }
+    }
+
+    // get_next_token(): 获取下一个非空白字符
+    // Return the next non-whitespace character. If the end of the input is reached,
+    // flag an error and return 0
+    char get_next_token() {
+        consume_garbage();  // 跳过空白字符和注释
+        if(failed) return static_cast<char>(0);  // 如果解析失败，返回 0
+        if(i == str.size()) {
+            return fail("unexpected end of input", static_cast<char>(0));  // 返回 0，同时设置错误信息
+        }
+        return str[i++];
+    }
+
+    
+};
+};
 }; // namespace json11
