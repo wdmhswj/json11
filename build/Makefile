@@ -183,6 +183,19 @@ json11/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\json11.dir\build.make CMakeFiles/json11.dir/build
 .PHONY : json11/fast
 
+#=============================================================================
+# Target rules for targets named json11_test
+
+# Build rule for target.
+json11_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 json11_test
+.PHONY : json11_test
+
+# fast build rule for target.
+json11_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\json11_test.dir\build.make CMakeFiles/json11_test.dir/build
+.PHONY : json11_test/fast
+
 json11.obj: json11.cpp.obj
 .PHONY : json11.obj
 
@@ -207,6 +220,30 @@ json11.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\json11.dir\build.make CMakeFiles/json11.dir/json11.cpp.s
 .PHONY : json11.cpp.s
 
+test.obj: test.cpp.obj
+.PHONY : test.obj
+
+# target to build an object file
+test.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\json11_test.dir\build.make CMakeFiles/json11_test.dir/test.cpp.obj
+.PHONY : test.cpp.obj
+
+test.i: test.cpp.i
+.PHONY : test.i
+
+# target to preprocess a source file
+test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\json11_test.dir\build.make CMakeFiles/json11_test.dir/test.cpp.i
+.PHONY : test.cpp.i
+
+test.s: test.cpp.s
+.PHONY : test.s
+
+# target to generate assembly for a file
+test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\json11_test.dir\build.make CMakeFiles/json11_test.dir/test.cpp.s
+.PHONY : test.cpp.s
+
 # Help Target
 help:
 	@echo The following are some of the valid targets for this Makefile:
@@ -221,9 +258,13 @@ help:
 	@echo ... rebuild_cache
 	@echo ... test
 	@echo ... json11
+	@echo ... json11_test
 	@echo ... json11.obj
 	@echo ... json11.i
 	@echo ... json11.s
+	@echo ... test.obj
+	@echo ... test.i
+	@echo ... test.s
 .PHONY : help
 
 

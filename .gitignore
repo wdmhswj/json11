@@ -19,3 +19,9 @@ install_manifest.txt
 build/.cmake
 build/Testing
 build/compile_commands.json
+
+# install
+/install
+
+# Windows excutable files
+*.exe

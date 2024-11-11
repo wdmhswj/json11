@@ -8,8 +8,8 @@ endif()
 
 enable_testing()  # 启用测试
 
-option(JSON11_BUILD_TESTS "Build unit tests" ON)
-option(JSON11_ENABLE_DR1467_CANARY "Enable canary test for DR 1467" ON)
+option(JSON11_BUILD_TESTS "Build unit tests" OFF)
+option(JSON11_ENABLE_DR1467_CANARY "Enable canary test for DR 1467" OFF)
 
 if(CMAKE_VERSION VERSION_LESS "3")
   add_definitions(-std=c++11)
@@ -19,14 +19,18 @@ else()
 endif()
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/install")
+  set(CMAKE_INSTALL_PREFIX /usr)
 endif()
 
-add_library(json11 json11.cpp)
+add_library(json11 json11.cpp)  # 将 json11.pc.in 模板文件配置为 json11.pc 文件，用于 pkg-config
 target_include_directories(json11 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_options(json11
   PRIVATE -fPIC -fno-rtti -fno-exceptions -Wall)
 
+# Set warning flags, which may vary per platform
+# CheckCXXCompilerFlag 是一个 CMake 模块，
+# 用于检查 C++ 编译器是否支持特定的编译标志。
+# 它通常用于确保项目可以在不同的编译器和平台上正确编译。
 include(CheckCXXCompilerFlag)
 set(_possible_warnings_flags /W4 /WX -Wextra -Werror)
 foreach(_warning_flag ${_possible_warnings_flags})
@@ -40,6 +44,8 @@ endforeach()
 configure_file("json11.pc.in" "json11.pc" @ONLY)
 
 if (JSON11_BUILD_TESTS)
+
+  # enable test for DR1467, described here: https://llvm.org/bugs/show_bug.cgi?id=23812
   if(JSON11_ENABLE_DR1467_CANARY)
     add_definitions(-D JSON11_ENABLE_DR1467_CANARY=1)
   else()
@@ -48,9 +54,8 @@ if (JSON11_BUILD_TESTS)
 
   add_executable(json11_test test.cpp)
   target_link_libraries(json11_test json11)
-  add_test(NAME json11_test COMMAND json11_test)  # 添加测试
 endif()
 
-install(TARGETS json11 DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/install/lib)
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/json11.hpp" DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/install/include)
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/json11.pc" DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/install/lib/pkgconfig)
+install(TARGETS json11 DESTINATION lib/${CMAKE_LIBRARY_ARCHITECTURE})
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/json11.hpp" DESTINATION include/${CMAKE_LIBRARY_ARCHITECTURE})
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/json11.pc" DESTINATION lib/${CMAKE_LIBRARY_ARCHITECTURE}/pkgconfig)
