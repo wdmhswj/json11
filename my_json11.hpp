@@ -187,7 +187,7 @@ public:
     // the given type. If not, return false and set err to a description of the error.
     // 返回 true 如果这是一个 JSON 对象，并且对于 types 中的每个项目，都有一个给定类型的字段。如果没有，则返回 false 并将 err 设置为错误的描述。
     // has_shape 函数用于检查当前 JSON 对象是否具有特定的结构。它接受一个 shape 类型的参数 types，其中包含要检查的键值对列表。如果 JSON 对象具有这些键值对，则函数返回 true；否则，返回 false 并将错误描述存储在 err 中。
-    typedef std::initializer_list<std::pair<std::string, Json>> shape;
+    typedef std::initializer_list<std::pair<std::string, Type>> shape;
     bool has_shape(const shape& types, std::string& err) const;
 
 private:

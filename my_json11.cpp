@@ -435,7 +435,330 @@ struct JsonParser final {
         return str[i++];
     }
 
+    // encode_utf8(pt, out): 将 pt 编码为 UTF-8，并添加到 out
+    void encode_utf8(long pt, string& out) {
+        if(pt < 0) {
+            return;
+        }
+        if(pt < 0x80) {
+            out += static_cast<char>(pt);
+        }else if(pt < 0x800) {
+            out += static_cast<char>((pt >> 6) | 0xC0);
+            out += static_cast<char>((pt & 0x3F) | 0x80);
+        }else if(pt < 0x10000) {
+            out += static_cast<char>((pt >> 12) | 0xE0);
+            out += static_cast<char>(((pt >> 6) & 0x3F) | 0x80);
+            out += static_cast<char>((pt & 0x3F) | 0x80);
+        }else{
+            out += static_cast<char>((pt >> 18) | 0xF0);
+            out += static_cast<char>(((pt >> 12) & 0x3F) | 0x80);
+            out += static_cast<char>(((pt >> 6) & 0x3F) | 0x80);
+            out += static_cast<char>((pt & 0x3F) | 0x80);
+        }
+    }
+
+    // parse_string(): 解析字符串
+    // Parse a string, starting at the current position: 从当前位置开始解析字符串
+    string parse_string() { // TODO: 具体原理未看
+        string out;
+        long last_escaped_codepoint = -1;
+        while (true) {
+            if (i == str.size())
+                return fail("unexpected end of input in string", "");
+
+            char ch = str[i++];
+
+            if (ch == '"') {
+                encode_utf8(last_escaped_codepoint, out);
+                return out;
+            }
+
+            if (in_range(ch, 0, 0x1f))
+                return fail("unescaped " + esc(ch) + " in string", "");
+
+            // The usual case: non-escaped characters
+            if (ch != '\\') {
+                encode_utf8(last_escaped_codepoint, out);
+                last_escaped_codepoint = -1;
+                out += ch;
+                continue;
+            }
+
+            // Handle escapes
+            if (i == str.size())
+                return fail("unexpected end of input in string", "");
+
+            ch = str[i++];
+
+            if (ch == 'u') {
+                // Extract 4-byte escape sequence
+                string esc = str.substr(i, 4);
+                // Explicitly check length of the substring. The following loop
+                // relies on std::string returning the terminating NUL when
+                // accessing str[length]. Checking here reduces brittleness.
+                if (esc.length() < 4) {
+                    return fail("bad \\u escape: " + esc, "");
+                }
+                for (size_t j = 0; j < 4; j++) {
+                    if (!in_range(esc[j], 'a', 'f') && !in_range(esc[j], 'A', 'F')
+                            && !in_range(esc[j], '0', '9'))
+                        return fail("bad \\u escape: " + esc, "");
+                }
+
+                long codepoint = strtol(esc.data(), nullptr, 16);
+
+                // JSON specifies that characters outside the BMP shall be encoded as a pair
+                // of 4-hex-digit \u escapes encoding their surrogate pair components. Check
+                // whether we're in the middle of such a beast: the previous codepoint was an
+                // escaped lead (high) surrogate, and this is a trail (low) surrogate.
+                if (in_range(last_escaped_codepoint, 0xD800, 0xDBFF)
+                        && in_range(codepoint, 0xDC00, 0xDFFF)) {
+                    // Reassemble the two surrogate pairs into one astral-plane character, per
+                    // the UTF-16 algorithm.
+                    encode_utf8((((last_escaped_codepoint - 0xD800) << 10)
+                                 | (codepoint - 0xDC00)) + 0x10000, out);
+                    last_escaped_codepoint = -1;
+                } else {
+                    encode_utf8(last_escaped_codepoint, out);
+                    last_escaped_codepoint = codepoint;
+                }
+
+                i += 4;
+                continue;
+            }
+
+            encode_utf8(last_escaped_codepoint, out);
+            last_escaped_codepoint = -1;
+
+            if (ch == 'b') {
+                out += '\b';
+            } else if (ch == 'f') {
+                out += '\f';
+            } else if (ch == 'n') {
+                out += '\n';
+            } else if (ch == 'r') {
+                out += '\r';
+            } else if (ch == 't') {
+                out += '\t';
+            } else if (ch == '"' || ch == '\\' || ch == '/') {
+                out += ch;
+            } else {
+                return fail("invalid escape character " + esc(ch), "");
+            }
+        }
+    }
+
+    // parse_number(): 解析数字
+    // parse a double.
+    Json parse_number() {
+        size_t start_pos = i;
+        
+        if(str[i] == '-') {
+            i++;        
+        }
+
+        // Integer part
+        if(str[i] == '0') {
+            i++;
+            if(in_range(str[i], '0', '9')) {
+                return fail("leading 0s not followed by '.'", 0);
+            }
+        }else if(in_range(str[i], '1', '9')) {
+            i++;
+            while(in_range(str[i], '0', '9')) {
+                i++;
+            }
+        }else{
+            return fail("invalid " + esc(str[i]) + " in number");    
+        }
+
+        if(str[i] != '.' && str[i] != 'e' && str[i] != 'E' 
+                && (i - start_pos) <= static_cast<size_t>(std::numeric_limits<int>::digits10)) {
+            return std::atoi(str.c_str() + start_pos);  // 将字符串转换为整数
+        }
+
+        // Decimal part: 小数部分
+        if(str[i] == '.') {
+            i++;
+            if(!in_range(str[i], '0', '9')) {
+                return fail("at least one digit required in decimal part", 0);
+            }
+            while(in_range(str[i], '0', '9')) {
+                i++;
+            }
+        }
+
+        // Exponent part: 指数部分
+        if(str[i] == 'e' || str[i] == 'E') {
+            i++;
+            if(str[i] == '+' || str[i] == '-') {
+                i++;
+            }
+            if(!in_range(str[i], '0', '9')) {
+                return fail("at least one digit required in exponent", 0);
+            }
+            while(in_range(str[i], '0', '9')) {
+                i++;
+            }
+        }
+        return std::strtod(str.c_str() + start_pos, nullptr);  // 将字符串转换为 double, std::strtod 函数：将字符串转换为 double
+    }
+
+    // expect(str, res): 期望 str, 返回 res
+    // Expect that 'str' starts at the character that was just read. If it does, advance
+    // the input and return res. If it does not, flag an error.
+    // 期望 str 从刚刚读取的字符开始。如果是这样，前进输入并返回 res。如果不是，则标记一个错误。
+    Json exepct(const string& expected, Json res) {
+        assert(i != 0);
+        i--;    // 解释：为什么要减 1，因为 get_next_token() 函数会自增 1
+        if(str.compare(i, expected.length(), expected) == 0) {  // 解释：
+            i += expected.length();
+            return res;
+        }else{
+            return fail("parse error: expected " + expected + ", got " + str.substr(i, expected.length()), Json());
+        }
+    }
+
+    // parse_json(int depth): 解析 JSON
+    // Parse a JSON object: 解析 JSON 对象
+    Json parse_json(int depth) {    // 解释 depth: 
+        if(depth > max_depth) {
+            return fail("exceeded maximum nesting depth");
+        }
+
+        char ch = get_next_token();
+        if(failed) {
+            return Json();
+        }
+
+        if(ch == '-' || (ch >= '0' && ch <= '9')) {
+            i--;
+            return parse_number();
+        }
+
+        if(ch == 't')
+            return exepct("true", true);
+        if(ch == 'f')
+            return exepct("false", false);
+        if(ch == 'n')
+            return exepct("null", Json());
+        if(ch == '"')
+            return parse_string();
+        if(ch == '{') {
+            map<string, Json> data;
+            ch = get_next_token();
+            if(ch == '}') 
+                return data;
+            while(true) {
+                if(ch != '"')
+                    return fail("expected '\"' in object, got " + esc(ch));
+                
+                string key = parse_string();
+                if(failed)
+                    return Json();
+
+                ch = get_next_token();
+                if(ch != ':')
+                    return fail("expected ':' in object, got " + esc(ch));
+                
+                data[move(key)] = parse_json(depth + 1);
+                if(failed)
+                    return Json();
+                
+                ch = get_next_token();
+                if(ch == '}')
+                    break;
+                if(ch != ',')
+                    return fail("expected ',' in object, got " + esc(ch));
+                
+                ch = get_next_token();
+            }
+            return data;
+        }
+
+        if(ch == '[') {
+            vector<Json> data;
+            ch = get_next_token();
+            if(ch == ']')
+                return data;
+            while(true) {
+                i--;
+                data.push_back(parse_json(depth + 1));
+                if(failed)
+                    return Json();
+                
+                ch = get_next_token();
+                if(ch == ']')
+                    break;
+                if(ch != ',')
+                    return fail("expected ',' in list, got " + esc(ch));
+                
+                ch = get_next_token();
+                (void)ch;
+            }
+            return data;
+        }
+
+        return fail("expected value, got " + esc(ch));
+    }
+
+
+};
+
+} // namespace
+
+Json Json::parse(const string& in, string& err, JsonParse strategy) {
+    JsonParser parser{in, 0, err, false, strategy}; // {} 表示初始化
+    Json result = parser.parse_json(0);
+
+    // Check for any trailing garbage: 检查是否有任何尾随垃圾
+    parser.consume_garbage();
+    if(parser.failed)
+        return Json();
+    if(parser.i != in.size())
+        return parser.fail("unexpected trailing " + esc(in[parser.i]));
     
-};
-};
-}; // namespace json11
+    return result;
+}
+
+// Documented in json11.hpp: 在 json11.hpp 中有文档
+vector<Json> Json::parse_multi(const string& in,
+                                std::string::size_type &parser_stop_pos,
+                                string& err,
+                                JsonParse strategy) {
+    JsonParser parser{in, 0, err, false, strategy};
+    parser_stop_pos = 0;
+    vector<Json> json_vec;
+    while(parser.i != in.size() && !parser.failed) {
+        json_vec.push_back(parser.parse_json(0));   // 0 表示 JSON 的深度
+        if(parser.failed)
+            break;
+
+        // Check for another object: 检查另一个对象
+        parser.consume_garbage();
+        if(parser.failed)
+            break;
+        parser_stop_pos = parser.i;
+    }
+    return json_vec;
+}
+
+// Shape-checking: 形状检查
+bool Json::has_shape(const shape& types, string& err) const {
+    if(!is_object()) {
+        err = "expected JSON object, got " + dump();
+        return false;
+    }
+
+    const auto& obj_items = object_items();
+    for(auto& item: types) {
+        const auto it = obj_items.find(item.first); // 
+        if(it == obj_items.cend() || it->second.type() != item.second) {
+            err = "bad type for " + item.first + " in " + dump();
+            return false;
+        }
+    }
+    return true;
+}
+
+} // namespace json11
