@@ -6,6 +6,8 @@ else()
   project(json11 VERSION 1.0.0 LANGUAGES CXX)
 endif()
 
+add_subdirectory(sub_project)
+
 enable_testing()  # 启用测试
 
 option(JSON11_BUILD_TESTS "Build unit tests" ON)

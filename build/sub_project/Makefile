@@ -141,14 +141,14 @@ install/strip/fast: preinstall/fast
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start D:\code_repository\json11\build\CMakeFiles D:\code_repository\json11\build\\CMakeFiles\progress.marks
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 all
+	cd /d D:\code_repository\json11\build && $(CMAKE_COMMAND) -E cmake_progress_start D:\code_repository\json11\build\CMakeFiles D:\code_repository\json11\build\sub_project\\CMakeFiles\progress.marks
+	cd /d D:\code_repository\json11\build && $(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 sub_project/all
 	$(CMAKE_COMMAND) -E cmake_progress_start D:\code_repository\json11\build\CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 clean
+	cd /d D:\code_repository\json11\build && $(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 sub_project/clean
 .PHONY : clean
 
 # The main clean target
@@ -157,118 +157,94 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 preinstall
+	cd /d D:\code_repository\json11\build && $(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 sub_project/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 preinstall
+	cd /d D:\code_repository\json11\build && $(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 sub_project/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	$(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles\Makefile.cmake 1
+	cd /d D:\code_repository\json11\build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles\Makefile.cmake 1
 .PHONY : depend
 
-#=============================================================================
-# Target rules for targets named json11
+# Convenience name for target.
+sub_project/CMakeFiles/my_json11.dir/rule:
+	cd /d D:\code_repository\json11\build && $(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 sub_project/CMakeFiles/my_json11.dir/rule
+.PHONY : sub_project/CMakeFiles/my_json11.dir/rule
 
-# Build rule for target.
-json11: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 json11
-.PHONY : json11
-
-# fast build rule for target.
-json11/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\json11.dir\build.make CMakeFiles/json11.dir/build
-.PHONY : json11/fast
-
-#=============================================================================
-# Target rules for targets named json11_test
-
-# Build rule for target.
-json11_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 json11_test
-.PHONY : json11_test
-
-# fast build rule for target.
-json11_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\json11_test.dir\build.make CMakeFiles/json11_test.dir/build
-.PHONY : json11_test/fast
-
-#=============================================================================
-# Target rules for targets named my_json11
-
-# Build rule for target.
-my_json11: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 my_json11
+# Convenience name for target.
+my_json11: sub_project/CMakeFiles/my_json11.dir/rule
 .PHONY : my_json11
 
 # fast build rule for target.
 my_json11/fast:
-	$(MAKE) $(MAKESILENT) -f sub_project\CMakeFiles\my_json11.dir\build.make sub_project/CMakeFiles/my_json11.dir/build
+	cd /d D:\code_repository\json11\build && $(MAKE) $(MAKESILENT) -f sub_project\CMakeFiles\my_json11.dir\build.make sub_project/CMakeFiles/my_json11.dir/build
 .PHONY : my_json11/fast
 
-#=============================================================================
-# Target rules for targets named my_test
+# Convenience name for target.
+sub_project/CMakeFiles/my_test.dir/rule:
+	cd /d D:\code_repository\json11\build && $(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 sub_project/CMakeFiles/my_test.dir/rule
+.PHONY : sub_project/CMakeFiles/my_test.dir/rule
 
-# Build rule for target.
-my_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 my_test
+# Convenience name for target.
+my_test: sub_project/CMakeFiles/my_test.dir/rule
 .PHONY : my_test
 
 # fast build rule for target.
 my_test/fast:
-	$(MAKE) $(MAKESILENT) -f sub_project\CMakeFiles\my_test.dir\build.make sub_project/CMakeFiles/my_test.dir/build
+	cd /d D:\code_repository\json11\build && $(MAKE) $(MAKESILENT) -f sub_project\CMakeFiles\my_test.dir\build.make sub_project/CMakeFiles/my_test.dir/build
 .PHONY : my_test/fast
 
-json11.obj: json11.cpp.obj
-.PHONY : json11.obj
+src/my_json11.obj: src/my_json11.cpp.obj
+.PHONY : src/my_json11.obj
 
 # target to build an object file
-json11.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\json11.dir\build.make CMakeFiles/json11.dir/json11.cpp.obj
-.PHONY : json11.cpp.obj
+src/my_json11.cpp.obj:
+	cd /d D:\code_repository\json11\build && $(MAKE) $(MAKESILENT) -f sub_project\CMakeFiles\my_json11.dir\build.make sub_project/CMakeFiles/my_json11.dir/src/my_json11.cpp.obj
+.PHONY : src/my_json11.cpp.obj
 
-json11.i: json11.cpp.i
-.PHONY : json11.i
+src/my_json11.i: src/my_json11.cpp.i
+.PHONY : src/my_json11.i
 
 # target to preprocess a source file
-json11.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\json11.dir\build.make CMakeFiles/json11.dir/json11.cpp.i
-.PHONY : json11.cpp.i
+src/my_json11.cpp.i:
+	cd /d D:\code_repository\json11\build && $(MAKE) $(MAKESILENT) -f sub_project\CMakeFiles\my_json11.dir\build.make sub_project/CMakeFiles/my_json11.dir/src/my_json11.cpp.i
+.PHONY : src/my_json11.cpp.i
 
-json11.s: json11.cpp.s
-.PHONY : json11.s
+src/my_json11.s: src/my_json11.cpp.s
+.PHONY : src/my_json11.s
 
 # target to generate assembly for a file
-json11.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\json11.dir\build.make CMakeFiles/json11.dir/json11.cpp.s
-.PHONY : json11.cpp.s
+src/my_json11.cpp.s:
+	cd /d D:\code_repository\json11\build && $(MAKE) $(MAKESILENT) -f sub_project\CMakeFiles\my_json11.dir\build.make sub_project/CMakeFiles/my_json11.dir/src/my_json11.cpp.s
+.PHONY : src/my_json11.cpp.s
 
-test.obj: test.cpp.obj
-.PHONY : test.obj
+src/my_test.obj: src/my_test.cpp.obj
+.PHONY : src/my_test.obj
 
 # target to build an object file
-test.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\json11_test.dir\build.make CMakeFiles/json11_test.dir/test.cpp.obj
-.PHONY : test.cpp.obj
+src/my_test.cpp.obj:
+	cd /d D:\code_repository\json11\build && $(MAKE) $(MAKESILENT) -f sub_project\CMakeFiles\my_test.dir\build.make sub_project/CMakeFiles/my_test.dir/src/my_test.cpp.obj
+.PHONY : src/my_test.cpp.obj
 
-test.i: test.cpp.i
-.PHONY : test.i
+src/my_test.i: src/my_test.cpp.i
+.PHONY : src/my_test.i
 
 # target to preprocess a source file
-test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\json11_test.dir\build.make CMakeFiles/json11_test.dir/test.cpp.i
-.PHONY : test.cpp.i
+src/my_test.cpp.i:
+	cd /d D:\code_repository\json11\build && $(MAKE) $(MAKESILENT) -f sub_project\CMakeFiles\my_test.dir\build.make sub_project/CMakeFiles/my_test.dir/src/my_test.cpp.i
+.PHONY : src/my_test.cpp.i
 
-test.s: test.cpp.s
-.PHONY : test.s
+src/my_test.s: src/my_test.cpp.s
+.PHONY : src/my_test.s
 
 # target to generate assembly for a file
-test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\json11_test.dir\build.make CMakeFiles/json11_test.dir/test.cpp.s
-.PHONY : test.cpp.s
+src/my_test.cpp.s:
+	cd /d D:\code_repository\json11\build && $(MAKE) $(MAKESILENT) -f sub_project\CMakeFiles\my_test.dir\build.make sub_project/CMakeFiles/my_test.dir/src/my_test.cpp.s
+.PHONY : src/my_test.cpp.s
 
 # Help Target
 help:
@@ -283,16 +259,14 @@ help:
 	@echo ... list_install_components
 	@echo ... rebuild_cache
 	@echo ... test
-	@echo ... json11
-	@echo ... json11_test
 	@echo ... my_json11
 	@echo ... my_test
-	@echo ... json11.obj
-	@echo ... json11.i
-	@echo ... json11.s
-	@echo ... test.obj
-	@echo ... test.i
-	@echo ... test.s
+	@echo ... src/my_json11.obj
+	@echo ... src/my_json11.i
+	@echo ... src/my_json11.s
+	@echo ... src/my_test.obj
+	@echo ... src/my_test.i
+	@echo ... src/my_test.s
 .PHONY : help
 
 
@@ -304,6 +278,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	$(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles\Makefile.cmake 0
+	cd /d D:\code_repository\json11\build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles\Makefile.cmake 0
 .PHONY : cmake_check_build_system
 
